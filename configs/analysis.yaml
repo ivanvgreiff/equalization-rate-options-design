@@ -1,0 +1,27 @@
+# Core analysis parameters
+# All values are sweep-able; these are sensible defaults.
+
+horizons:
+  - name: "7d"
+    intervals: 21       # 7 * 24 / 8
+  - name: "30d"
+    intervals: 90       # 30 * 24 / 8
+  - name: "90d"
+    intervals: 270      # 90 * 24 / 8
+
+sampling:
+  interval_hours: 8
+  dt_years: 0.00091324  # 8 / (24 * 365)
+
+risk_metrics:
+  var_alpha: 0.01       # 99% VaR / CVaR
+  cvar_alpha: 0.01
+
+premium:
+  risk_load_lambda: 0.35        # CVaR loading multiplier
+  target_sharpe: 0.75           # seller target Sharpe
+  cost_of_capital_annual: 0.12  # 12% annualized (DeFi opportunity cost)
+
+# Swap benchmark: fixed rate = trailing mean over this lookback
+swap_benchmark:
+  lookback_intervals: 90  # 30d trailing mean at window start

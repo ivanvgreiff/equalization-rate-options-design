@@ -1,0 +1,31 @@
+# Stress episodes for event-study analysis (Phase 6)
+# Timestamps in UTC. Premium estimation uses only pre-event data.
+
+events:
+
+  - name: "Black Thursday"
+    description: "COVID crash — massive liquidation cascade, funding deeply negative"
+    start: "2020-03-12T00:00:00Z"
+    end: "2020-03-20T00:00:00Z"
+    premium_train_end: "2020-03-11T00:00:00Z"
+
+  - name: "May 2021 Crash"
+    description: "China mining ban + Tesla reversal — extended negative funding"
+    start: "2021-05-19T00:00:00Z"
+    end: "2021-05-28T00:00:00Z"
+    premium_train_end: "2021-05-18T00:00:00Z"
+
+  - name: "FTX Collapse"
+    description: "November 2022 FTX collapse — market-wide contagion"
+    start: "2022-11-07T00:00:00Z"
+    end: "2022-11-18T00:00:00Z"
+    premium_train_end: "2022-11-06T00:00:00Z"
+
+  - name: "Luna/UST Depeg"
+    description: "Terra collapse — extended negative funding and liquidations"
+    start: "2022-05-09T00:00:00Z"
+    end: "2022-05-20T00:00:00Z"
+    premium_train_end: "2022-05-08T00:00:00Z"
+
+# Add more events as discovered from Phase 3 descriptive analysis.
+# Pattern: identify periods where BitMEX funding was persistently negative.

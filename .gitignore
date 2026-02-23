@@ -1,0 +1,36 @@
+# Data (keep samples only)
+data/raw/
+data/interim/
+data/processed/
+
+# Docs
+docs/
+
+# Reports artifacts (regenerable)
+reports/figures/*.png
+reports/figures/*.pdf
+reports/tables/*.parquet
+reports/tables/*.csv
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment
+.venv/
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

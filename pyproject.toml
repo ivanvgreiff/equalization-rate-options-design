@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ddx-funding-rate-options"
+version = "0.1.0"
+description = "Quantitative analysis of DDX funding-rate option derivatives vs linear hedges"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "scipy>=1.11",
+    "matplotlib>=3.7",
+    "seaborn>=0.13",
+    "pyarrow>=14.0",
+    "pyyaml>=6.0",
+    "jupyter>=1.0",
+    "pytest>=7.4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.4",
+    "ipykernel>=6.25",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
