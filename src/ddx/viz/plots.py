@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import numpy as np
-import matplotlib
-matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-INTERVALS_PER_YEAR = 365 * 24 / 8  # 1095
+from ddx.utils.units import INTERVALS_PER_YEAR, to_apr_pct, to_pct_notional
 
 
 def plot_funding_timeline(
@@ -20,8 +18,8 @@ def plot_funding_timeline(
     show_apr: bool = True,
 ) -> plt.Figure:
     """Plot funding CF over time with negative regions highlighted."""
-    y = funding_cf * INTERVALS_PER_YEAR if show_apr else funding_cf
-    ylabel = "Annualized Rate (APR)" if show_apr else "Per-interval CF"
+    y = to_apr_pct(funding_cf) if show_apr else funding_cf
+    ylabel = "APR (%)" if show_apr else "Per-interval CF"
 
     fig, axes = plt.subplots(2 if rolling_window else 1, 1,
                              figsize=(14, 8 if rolling_window else 5),
@@ -41,7 +39,7 @@ def plot_funding_timeline(
     if rolling_window and len(funding_cf) >= rolling_window:
         import pandas as pd
         roll = pd.Series(funding_cf).rolling(rolling_window, min_periods=rolling_window).mean()
-        roll_y = roll * INTERVALS_PER_YEAR if show_apr else roll
+        roll_y = to_apr_pct(roll) if show_apr else roll
         axes[1].plot(timestamps, roll_y, linewidth=1.0, color="darkblue")
         axes[1].axhline(0, color="black", linewidth=0.5, linestyle="--")
         axes[1].set_ylabel(f"Rolling {rolling_window}-interval Mean ({ylabel})")
@@ -73,7 +71,7 @@ def plot_streak_distributions(
         ax = axes[idx // cols][idx % cols]
         streaks = streak_data[b]
         if len(streaks) == 0:
-            ax.set_title(f"b={b:.5f} APR={b*INTERVALS_PER_YEAR:.2f}%\n(no streaks)")
+            ax.set_title(f"b={b:.5f} APR={to_apr_pct(b):.2f}%\n(no streaks)")
             continue
 
         max_len = int(np.max(streaks))
@@ -89,7 +87,7 @@ def plot_streak_distributions(
         ax.plot(k_range, geom_pmf, "r-o", markersize=3, linewidth=1.2,
                 label=f"Geometric(p={p_geom:.3f})")
 
-        b_apr = b * INTERVALS_PER_YEAR * 100
+        b_apr = to_apr_pct(b)
         ax.set_title(f"b={b:.5f} (APR={b_apr:.1f}%)\nmean={mean_len:.1f}, max={max_len}")
         ax.set_xlabel("Streak length (intervals)")
         ax.set_ylabel("Density")
@@ -118,21 +116,28 @@ def plot_rolling_regime_markers(
 ) -> plt.Figure:
     """Three-panel time series of rolling regime indicators."""
     fig, axes = plt.subplots(3, 1, figsize=(14, 10), sharex=True)
-    scale = INTERVALS_PER_YEAR if show_apr else 1.0
-    unit = "APR" if show_apr else "per-interval"
 
-    axes[0].plot(timestamps, rolling_mean * scale, linewidth=0.8, color="darkblue")
+    if show_apr:
+        mean_display = to_apr_pct(rolling_mean)
+        p01_display = to_apr_pct(rolling_p01)
+        unit = "APR (%)"
+    else:
+        mean_display = rolling_mean
+        p01_display = rolling_p01
+        unit = "per-interval"
+
+    axes[0].plot(timestamps, mean_display, linewidth=0.8, color="darkblue")
     axes[0].axhline(0, color="black", linewidth=0.5, linestyle="--")
-    axes[0].set_ylabel(f"Rolling Mean ({unit})")
+    axes[0].set_ylabel(f"Rolling Mean {unit}")
     axes[0].set_title(title)
 
     axes[1].plot(timestamps, rolling_pct_neg * 100, linewidth=0.8, color="darkred")
     axes[1].set_ylabel("% Negative Intervals")
     axes[1].set_ylim(0, 100)
 
-    axes[2].plot(timestamps, rolling_p01 * scale, linewidth=0.8, color="purple")
+    axes[2].plot(timestamps, p01_display, linewidth=0.8, color="purple")
     axes[2].axhline(0, color="black", linewidth=0.5, linestyle="--")
-    axes[2].set_ylabel(f"Rolling 1st Percentile ({unit})")
+    axes[2].set_ylabel(f"Rolling 1st Percentile {unit}")
     axes[2].set_xlabel("Date")
 
     if event_dates:
@@ -159,10 +164,9 @@ def plot_distribution_analysis(
     """Three-panel: f_i histogram, l_i histogram, QQ plot."""
     from scipy import stats as sp_stats
 
-    scale = INTERVALS_PER_YEAR if show_apr else 1.0
-    unit = "APR" if show_apr else "per-interval"
-    f_scaled = funding_cf * scale
-    l_i = np.maximum(0.0, -funding_cf) * scale
+    unit = "APR (%)" if show_apr else "per-interval"
+    f_scaled = to_apr_pct(funding_cf) if show_apr else funding_cf
+    l_i = to_apr_pct(np.maximum(0.0, -funding_cf)) if show_apr else np.maximum(0.0, -funding_cf)
 
     fig, axes = plt.subplots(1, 3, figsize=(16, 5))
 
@@ -170,12 +174,12 @@ def plot_distribution_analysis(
     ax.hist(f_scaled, bins=150, density=True, alpha=0.7, color="steelblue", edgecolor="none")
     ax.axvline(0, color="black", linewidth=0.5, linestyle="--")
     median_apr = float(np.median(f_scaled))
-    ax.axvline(median_apr, color="red", linewidth=1, linestyle="-", alpha=0.7,
-               label=f"Median={median_apr:.4f}")
+    ax.annotate(f"Median = {median_apr:.2f}", xy=(0.97, 0.95), xycoords="axes fraction",
+                ha="right", va="top", fontsize=8,
+                bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.85))
     ax.set_xlabel(f"Funding Rate ({unit})")
     ax.set_ylabel("Density")
     ax.set_title(f"{title_prefix}f_i Distribution")
-    ax.legend(fontsize=8)
 
     ax = axes[1]
     l_pos = l_i[l_i > 0]
@@ -221,7 +225,12 @@ def plot_top_episodes(
         if metric == "total_loss":
             v = ep["total_loss"]
             if show_apr:
-                v *= INTERVALS_PER_YEAR
+                v = to_pct_notional(v)
+            values.append(v)
+        elif metric == "mean_severity":
+            v = ep["mean_severity"]
+            if show_apr:
+                v = to_apr_pct(v)
             values.append(v)
         elif metric == "duration":
             values.append(ep["duration"])
@@ -235,8 +244,11 @@ def plot_top_episodes(
     ax.set_yticklabels(labels, fontsize=8)
 
     if metric == "total_loss":
-        unit = " (APR)" if show_apr else ""
+        unit = " (% of notional)" if show_apr else ""
         ax.set_xlabel(f"Total Loss{unit}")
+    elif metric == "mean_severity":
+        unit = " APR (%)" if show_apr else ""
+        ax.set_xlabel(f"Mean Severity{unit}")
     elif metric == "duration":
         ax.set_xlabel("Duration (intervals)")
     else:

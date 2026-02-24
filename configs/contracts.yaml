@@ -4,44 +4,61 @@
 # Sign convention: f_i > 0 means buyer (short-perp) receives funding.
 # Loss per interval: l_i = max(0, -f_i)
 
-products:
+# --------------------------------------------------------------------------
+# CORE products (included in all mainline analyses: Phases 6-8)
+# --------------------------------------------------------------------------
+core:
 
   vanilla_floor:
     description: >
       Full insurance against negative funding. Pays sum of max(0, -f_i - d)
-      over the horizon, capped at L.
+      over the horizon, capped at L. Used as a *benchmark* — d=0 gives the
+      full-insurance upper bound on cost.
     parameters:
-      deductible_d:  [0.0, 0.00002, 0.00005, 0.0001, 0.0002, 0.0005]
-      cap_L:         [null, 0.01, 0.02, 0.05]
+      deductible_d:  [0.0, 0.0001, 0.0003]
+      cap_L:         [null]
+    baseline:
+      deductible_d: 0.0
+      cap_L: null
+    realistic:
+      deductible_d: 0.0001
+      cap_L: null
 
   distress_activated_floor:
     description: >
       Persistence-gated floor. Only pays after m consecutive intervals where
-      f_i < -b. Payoff per activated interval: max(0, -f_i - d).
+      f_i < -b. Payoff per activated interval: max(0, -f_i - d). Setting d=b
+      makes the threshold an actual strike (pay only excess beyond b).
     parameters:
-      threshold_b:   [0.0, 0.00002, 0.00005, 0.0001, 0.0003]
-      streak_m:      [1, 3, 6, 9]
-      deductible_d:  [0.0, 0.0001]
-      cap_L:         [null, 0.02]
+      threshold_b:   [0.0001, 0.0003]
+      streak_m:      [2, 3, 4, 5]
+      deductible_d:  ["=b"]
+      cap_L:         [null]
+    baseline:
+      threshold_b: 0.0001
+      streak_m: 3
+      deductible_d: 0.0001
+      cap_L: null
+    sensitivity:
+      threshold_b: 0.0001
+      streak_m: 2
+      deductible_d: 0.0001
+      cap_L: null
 
   aggregate_stop_loss:
     description: >
       Reserve-layer hedge. Pays max(0, Lambda - D) where Lambda = total
-      negative funding loss over horizon. Capped at L.
+      negative funding loss over horizon. D is calibrated per horizon as
+      a quantile of the rolling Lambda distribution.
     parameters:
-      deductible_D:  [0.001, 0.003, 0.005, 0.01]
-      cap_L:         [null, 0.02, 0.05]
-
-  soft_duration_cover:
-    description: >
-      Like distress-activated floor but with soft ramp from 0->1 over
-      [m, m+s] consecutive intervals, reducing cliff effects.
-    parameters:
-      threshold_b:   [0.0, 0.00002, 0.00005, 0.0001, 0.0003]
-      streak_m:      [3, 6]
-      ramp_s:        [2, 3, 6]
-      deductible_d:  [0.0]
-      cap_L:         [null, 0.02]
+      deductible_D:  ["q75", "q80", "q85", "q90", "q95"]
+      cap_L:         [null]
+    baseline:
+      deductible_D: "q90"
+      cap_L: null
+    sensitivity:
+      deductible_D: "q95"
+      cap_L: null
 
 benchmarks:
 
@@ -50,4 +67,38 @@ benchmarks:
       Linear hedge: lock funding at fixed rate k for the tenor.
       k is estimated as trailing mean/median/EWMA of f_i over a lookback window.
     parameters:
-      lookback_intervals: [90, 270]
+      lookback_intervals: [90]
+    primary_method: "ewma"
+    secondary_method: "mean"
+
+# --------------------------------------------------------------------------
+# APPENDIX products (included only in dedicated robustness/design notebooks)
+# --------------------------------------------------------------------------
+appendix:
+
+  soft_duration_cover:
+    description: >
+      Like distress-activated floor but with soft ramp from 0->1 over
+      [m, m+s] consecutive intervals, reducing cliff effects.
+      Moved to appendix because synthetic results (Phase 2) show it has
+      the lowest sharpness of all option products — the soft ramp dilutes
+      hedge efficiency relative to DAF.
+    parameters:
+      threshold_b:   [0.0001, 0.0003]
+      streak_m:      [3, 6]
+      ramp_s:        [2, 3, 6]
+      deductible_d:  [0.0]
+      cap_L:         [null]
+
+  # Full parameter sweep grids (used only for Phase 6 coarse sweeps)
+  vanilla_floor_sweep:
+    parameters:
+      deductible_d:  [0.0, 0.00002, 0.00005, 0.0001, 0.0002, 0.0003, 0.0005]
+      cap_L:         [null, 0.01, 0.02, 0.05]
+
+  distress_activated_floor_sweep:
+    parameters:
+      threshold_b:   [0.0, 0.00002, 0.00005, 0.0001, 0.0003]
+      streak_m:      [1, 2, 3, 4, 5, 6, 9]
+      deductible_d:  [0.0, "=b"]
+      cap_L:         [null, 0.02]

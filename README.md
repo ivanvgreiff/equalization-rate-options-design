@@ -1,65 +1,67 @@
 # DDX Funding-Rate Options Analysis
 
-Quantitative analysis of DDX protocol option-style derivatives for hedging perpetual futures funding rates, compared against linear hedges (swaps/futures).
+Quantitative analysis of option-style derivatives for hedging perpetual futures funding-rate risk, compared against linear hedges (swaps/futures) offered by existing protocols in 2026.
+
+**[Technical Specifications of all derivatives](https://hackmd.io/@Omv7qL5_Q-SAKHCU75SPHw/HJnvGo5_Wl)** — full mathematical definitions, parameters, calibration methodology, and design rationale for every instrument analyzed.
+
+Synthetic dollar stablecoin protocols like Ethena hold delta-neutral short-perp positions that receive funding when positive and pay funding when negative. They manage negative-funding risk with reserve funds. DDX proposes that option-style derivatives are more capital-efficient than reserves or other existing on-chain rate-derivatives for hedging this tail risk.
+
+This repo builds the empirical evidence: historical funding-rate data across four exchanges, calibrated product parameters, and a pricing/risk framework to evaluate each derivative's cost and tail-risk reduction.
+
+## Core Products
+
+| Product | Idea |
+|---------|------|
+| **Vanilla Funding Floor** | Full insurance against negative funding (benchmark — upper bound on cost) |
+| **Distress-Activated Floor (DAF)** | Only pays after sustained distress (m consecutive bad intervals). Cheaper than the full floor. |
+| **Aggregate Stop-Loss (ASL)** | "My reserve absorbs the first D of losses; insure me beyond that." Highest efficiency per premium dollar. |
+| **Swap** (benchmark) | Linear hedge — locks funding at a fixed rate. Eliminates variance but sacrifices upside. |
+
+## Key Empirical Findings
+
+**Data:** Bybit BTCUSD inverse perpetual (primary), plus BitMEX, Deribit, and Binance for cross-venue validation. ~7 years of 8-hour funding-rate history.
+
+- **81.6% of funding intervals are non-negative** on Bybit. Negative funding is the minority — but when it hits, it hits hard (excess kurtosis ~37, heavy tails).
+- **Three exchanges share a discrete base rate at 0.0001 per 8h** (10.95% APR). Deribit is structurally different (no base rate, no cap, left-skewed). Parameters calibrated on base-rate venues do not transfer to Deribit.
+- **Funding-rate persistence is heavier than geometric** — streaks of negative funding last longer than a memoryless model would predict. This is the phenomenon that makes persistence-gated products (DAF) economically meaningful.
+- **ASL deductible D = q90(Λ)** per horizon positions the product as a reinsurance tail layer, activating in ~10% of rolling windows.
+- **DAF with m=3 (24h sustained distress)** activates in ~25% of 30-day windows — frequent enough to provide real protection, rare enough to be meaningfully cheaper than the vanilla floor.
 
 ## Quick Start
 
 ```bash
 pip install -e ".[dev]"
-pytest                              # run unit tests
-python scripts/build_dataset.py --input data/raw/bitmex_funding.csv
-python scripts/run_descriptives.py --data data/processed/bitmex_xbtusd.parquet
-python scripts/run_premium_grid.py --data data/processed/bitmex_xbtusd.parquet
-python scripts/run_frontier.py     --data data/processed/bitmex_xbtusd.parquet
-python scripts/run_event_studies.py --data data/processed/bitmex_xbtusd.parquet
+pytest
 ```
 
-## Products Analyzed
+**Data pipeline** (requires internet):
+```bash
+python scripts/fetch_bybit.py
+python scripts/fetch_bitmex.py
+python scripts/fetch_deribit.py
+python scripts/fetch_binance.py
+python scripts/build_dataset.py --venue bybit
+python scripts/build_dataset.py --venue bitmex
+python scripts/build_dataset.py --venue deribit
+python scripts/build_dataset.py --venue binance
+```
 
-| # | Product | Description |
-|---|---------|-------------|
-| 1 | Vanilla Funding Floor | Full insurance against negative funding, preserves upside |
-| 2 | Distress-Activated Floor | Persistence-gated floor — only pays after sustained bad regime |
-| 3 | Aggregate Stop-Loss | Reserve-layer hedge — covers losses beyond a deductible |
-| 4 | Soft-Duration Cover | Smoothed version of #2 to reduce cliff effects |
-| B | Swap Benchmark | Linear hedge — lock funding at fixed rate |
-
-See `docs/contract_specs.md` for full mathematical specifications.
-See `docs/Master_Implementation_Plan.md` for the detailed multi-phase implementation plan.
-
-## Implementation Phases
-
-| Phase | Description | Status |
-|-------|-------------|--------|
-| 1 | MVP pipeline hardening (regularity gate, loss-only metrics, swap variants, config-driven scripts) | Pending |
-| 2 | Synthetic sanity check (notebook 01) | Pending |
-| 3 | BitMEX data integration + QA | Pending |
-| 4 | Descriptive funding analytics (notebook 02) | Pending |
-| 5 | Single-series MVP results at 30d (notebook 03) | Pending |
-| 6 | Premium surfaces + parameter sweeps (notebook 04) | Pending |
-| 7 | Full hedge-efficiency frontier 7d/30d/90d (notebook 05) | Pending |
-| 8 | Stress episode event studies (notebook 06) | Pending |
-| 9 | Regime calibration + stress pricing (notebook 07) | Pending |
+**Notebooks** (open in Jupyter/VS Code):
+| Notebook | Phase | What it does |
+|----------|-------|-------------|
+| `01_synthetic_sanity.ipynb` | 2 | Validates payoff functions on synthetic two-regime Markov data |
+| `02_funding_descriptives.ipynb` | 4 | Full statistical characterization of funding rates across 4 venues |
+| `03_calibration.ipynb` | 5 | Freezes baseline parameters for all products using empirical calibration |
 
 ## Repo Structure
 
 ```
-configs/           Analysis parameters, contract grids, stress events
-data/raw/          Raw BitMEX dumps (gitignored)
-data/processed/    Canonical parquet (gitignored)
-data/samples/      Tiny committed samples for tests
-docs/              Contract specs, implementation reports, master plan, ChatGPT Pro reports
-notebooks/         Exploration and presentation (no business logic)
-reports/           Generated figures, tables, markdown reports
-scripts/           Reproducible pipeline entry points
-src/ddx/           Core library
-  data/            Schema, preprocessing, I/O
-  payoffs/         All 4 DDX product payoff functions
-  pricing/         Premium decomposition (pure + risk load + capital charge)
-  risk/            VaR, CVaR, episode statistics
-  backtest/        Rolling-window engine, hedge strategy definitions
-  models/          Synthetic generators, regime models
-  viz/             Plotting utilities
-  utils/           Config loading, helpers
-tests/             Unit tests
+configs/        Analysis parameters, contract grids, stress events
+data/           Raw CSVs (gitignored), processed parquets (gitignored), committed samples
+docs/           Technical specs, implementation reports, master plan
+notebooks/      Analysis and presentation (no business logic)
+reports/        Generated figures, tables, markdown QA reports
+scripts/        Data fetching, processing, and analysis entry points
+src/ddx/        Core library (payoffs, pricing, risk, backtest, calibration, viz, utils)
+tests/          Unit tests (81 tests)
 ```

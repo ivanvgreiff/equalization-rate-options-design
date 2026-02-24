@@ -4,10 +4,13 @@
 horizons:
   - name: "7d"
     intervals: 21       # 7 * 24 / 8
+    days: 7
   - name: "30d"
     intervals: 90       # 30 * 24 / 8
+    days: 30
   - name: "90d"
     intervals: 270      # 90 * 24 / 8
+    days: 90
 
 sampling:
   interval_hours: 8
@@ -24,5 +27,22 @@ premium:
 
 swap_benchmark:
   lookback_intervals: 90              # 30d trailing window
-  methods: ["mean", "median", "ewma"]
+  primary_method: "ewma"
+  secondary_method: "mean"
+  methods: ["ewma", "mean"]
   ewma_halflife_intervals: 45         # half the lookback
+
+# Calibration settings (Phase 5)
+calibration:
+  primary_venue: "bybit"
+  asl_deductible_quantile_baseline: 0.90
+  asl_deductible_quantile_sensitivity: 0.95
+  daf_baseline:
+    threshold_b: 0.0001
+    streak_m: 3
+  daf_sensitivity:
+    threshold_b: 0.0001
+    streak_m: 2
+  floor_deductibles: [0.0, 0.0001, 0.0003]
+  conditional_loss_quantiles: [0.25, 0.50, 0.75, 0.90, 0.95, 0.99]
+  lambda_quantiles: [0.50, 0.75, 0.80, 0.85, 0.90, 0.95, 0.99]
