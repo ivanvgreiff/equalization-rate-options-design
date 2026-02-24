@@ -80,3 +80,49 @@ def full_premium(
         "capital_charge": cc,
         "total": pp + rl + cc,
     }
+
+
+def compute_premium(
+    payoffs: np.ndarray,
+    method: str = "full",
+    lam: float = 0.35,
+    cost_of_capital: float = 0.12,
+    horizon_years: float = 30 / 365,
+    target_sharpe: float = 0.75,
+    alpha: float = 0.01,
+) -> dict:
+    """Dispatcher: compute premium under the specified method.
+
+    method : "pure" | "full" | "target_sharpe" | "all"
+
+    Returns a dict that always contains at least:
+        {"method": str, "premium": float, ...components}
+
+    When method="all", the dict contains keys for every method:
+        premium_pure, premium_full, premium_target_sharpe, plus components.
+    """
+    pp = pure_premium(payoffs)
+
+    if method == "pure":
+        return {"method": "pure", "premium": pp, "pure": pp}
+
+    fp = full_premium(payoffs, lam, cost_of_capital, horizon_years, alpha)
+
+    if method == "full":
+        return {"method": "full", "premium": fp["total"], **fp}
+
+    tsp = target_sharpe_premium(payoffs, target_sharpe)
+
+    if method == "target_sharpe":
+        return {"method": "target_sharpe", "premium": tsp, "pure": pp,
+                "target_sharpe_value": tsp}
+
+    # method == "all"
+    return {
+        "method": "all",
+        "premium": fp["total"],
+        "premium_pure": pp,
+        "premium_full": fp["total"],
+        "premium_target_sharpe": tsp,
+        **fp,
+    }

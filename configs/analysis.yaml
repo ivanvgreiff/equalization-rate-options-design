@@ -22,6 +22,7 @@ premium:
   target_sharpe: 0.75           # seller target Sharpe
   cost_of_capital_annual: 0.12  # 12% annualized (DeFi opportunity cost)
 
-# Swap benchmark: fixed rate = trailing mean over this lookback
 swap_benchmark:
-  lookback_intervals: 90  # 30d trailing mean at window start
+  lookback_intervals: 90              # 30d trailing window
+  methods: ["mean", "median", "ewma"]
+  ewma_halflife_intervals: 45         # half the lookback

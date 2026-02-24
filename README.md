@@ -25,20 +25,21 @@ python scripts/run_event_studies.py --data data/processed/bitmex_xbtusd.parquet
 | B | Swap Benchmark | Linear hedge — lock funding at fixed rate |
 
 See `docs/contract_specs.md` for full mathematical specifications.
+See `docs/Master_Implementation_Plan.md` for the detailed multi-phase implementation plan.
 
 ## Implementation Phases
 
 | Phase | Description | Status |
 |-------|-------------|--------|
-| 0 | Contract spec freeze + index conventions | Done (docs/contract_specs.md) |
-| 1 | Core payoff engine + synthetic sanity check | Scaffolded |
-| 2 | Data ingestion pipeline (BitMEX) | Scaffolded |
-| 3 | Descriptive funding analytics + regime characterization | Scaffolded |
-| 4 | Empirical payoff distributions + premium surfaces | Scaffolded |
-| 5 | Hedge performance frontier (DDX vs swaps) | Scaffolded |
-| 6 | Stress episode event studies | Scaffolded |
-| 7 | Basis-risk analysis (multi-venue) | Deferred — requires cross-venue data |
-| 8 | Model-based pricing (regime calibration) | Partial — regime model scaffolded |
+| 1 | MVP pipeline hardening (regularity gate, loss-only metrics, swap variants, config-driven scripts) | Pending |
+| 2 | Synthetic sanity check (notebook 01) | Pending |
+| 3 | BitMEX data integration + QA | Pending |
+| 4 | Descriptive funding analytics (notebook 02) | Pending |
+| 5 | Single-series MVP results at 30d (notebook 03) | Pending |
+| 6 | Premium surfaces + parameter sweeps (notebook 04) | Pending |
+| 7 | Full hedge-efficiency frontier 7d/30d/90d (notebook 05) | Pending |
+| 8 | Stress episode event studies (notebook 06) | Pending |
+| 9 | Regime calibration + stress pricing (notebook 07) | Pending |
 
 ## Repo Structure
 
@@ -47,7 +48,7 @@ configs/           Analysis parameters, contract grids, stress events
 data/raw/          Raw BitMEX dumps (gitignored)
 data/processed/    Canonical parquet (gitignored)
 data/samples/      Tiny committed samples for tests
-docs/              Contract specs, methodology
+docs/              Contract specs, implementation reports, master plan, ChatGPT Pro reports
 notebooks/         Exploration and presentation (no business logic)
 reports/           Generated figures, tables, markdown reports
 scripts/           Reproducible pipeline entry points

@@ -7,6 +7,7 @@ The processed dataset has one row per funding interval with these columns:
                       from the *buyer (short-perp)* perspective.
                       Positive = buyer receives; negative = buyer pays.
     dt_hours        : interval length in hours (8 for standard BitMEX)
+    is_regular      : boolean — True if dt_hours is within tolerance of 8h
 """
 
 from __future__ import annotations
@@ -14,6 +15,8 @@ from __future__ import annotations
 import pandas as pd
 
 REQUIRED_COLUMNS = ["timestamp", "funding_rate", "funding_cf", "dt_hours"]
+INTERVAL_HOURS = 8.0
+INTERVAL_TOLERANCE_HOURS = 0.5
 
 
 def validate(df: pd.DataFrame) -> pd.DataFrame:

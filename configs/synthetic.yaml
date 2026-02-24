@@ -1,0 +1,43 @@
+# Synthetic scenario parameters for the two-regime Markov model.
+# Used by notebooks/01_synthetic_sanity.ipynb
+
+# All means/vols are annualized APR.  The generator converts to per-interval
+# CF internally by multiplying by dt_years.
+
+common:
+  n_intervals: 90        # 30d at 8h intervals
+  n_paths_dev: 20000     # fast iteration
+  n_paths_final: 200000  # publication-quality
+  dt_years: 0.00091324   # 8 / (24 * 365)
+
+scenarios:
+
+  base:
+    description: "Mild bad regime, short episodes - funding mostly positive"
+    good_mean_apr: 0.12
+    good_vol_apr: 0.10
+    bad_mean_apr: -0.08
+    bad_vol_apr: 0.20
+    p_good_to_bad: 0.03
+    p_bad_to_good: 0.15
+    # stationary P(bad) ≈ 16.7%, expected bad run ≈ 6.7 intervals (2.2 days)
+
+  persistence_stress:
+    description: "Same severity as base but bad regimes last much longer"
+    good_mean_apr: 0.12
+    good_vol_apr: 0.10
+    bad_mean_apr: -0.08
+    bad_vol_apr: 0.20
+    p_good_to_bad: 0.05
+    p_bad_to_good: 0.06
+    # stationary P(bad) ≈ 45.5%, expected bad run ≈ 16.7 intervals (5.6 days)
+
+  severity_persistence_stress:
+    description: "More negative bad mean, higher bad vol, and longer episodes"
+    good_mean_apr: 0.10
+    good_vol_apr: 0.12
+    bad_mean_apr: -0.15
+    bad_vol_apr: 0.30
+    p_good_to_bad: 0.05
+    p_bad_to_good: 0.06
+    # stationary P(bad) ≈ 45.5%, expected bad run ≈ 16.7 intervals (5.6 days)

@@ -1,0 +1,244 @@
+events_bybit:
+- name: Worst-Lambda-1 (2020-03-13)
+  description: 'Auto-discovered: rank 1 worst 30d window by aggregate loss (Lambda=0.043001)'
+  start: '2020-03-13T00:00:00+00:00'
+  end: '2020-04-11T16:00:00+00:00'
+  premium_train_end: '2020-03-12T00:00:00+00:00'
+  metric_value: 0.043001059999999994
+- name: Worst-Lambda-2 (2020-03-12)
+  description: 'Auto-discovered: rank 2 worst 30d window by aggregate loss (Lambda=0.042761)'
+  start: '2020-03-12T16:00:00+00:00'
+  end: '2020-04-11T08:00:00+00:00'
+  premium_train_end: '2020-03-11T16:00:00+00:00'
+  metric_value: 0.04276144999999999
+- name: Worst-Lambda-3 (2020-03-12)
+  description: 'Auto-discovered: rank 3 worst 30d window by aggregate loss (Lambda=0.042107)'
+  start: '2020-03-12T08:00:00+00:00'
+  end: '2020-04-11T00:00:00+00:00'
+  premium_train_end: '2020-03-11T08:00:00+00:00'
+  metric_value: 0.042107439999999996
+- name: Worst-Lambda-4 (2020-03-12)
+  description: 'Auto-discovered: rank 4 worst 30d window by aggregate loss (Lambda=0.041693)'
+  start: '2020-03-12T00:00:00+00:00'
+  end: '2020-04-10T16:00:00+00:00'
+  premium_train_end: '2020-03-11T00:00:00+00:00'
+  metric_value: 0.04169280999999999
+- name: Worst-Lambda-5 (2020-03-11)
+  description: 'Auto-discovered: rank 5 worst 30d window by aggregate loss (Lambda=0.041440)'
+  start: '2020-03-11T16:00:00+00:00'
+  end: '2020-04-10T08:00:00+00:00'
+  premium_train_end: '2020-03-10T16:00:00+00:00'
+  metric_value: 0.04143997
+- name: Longest-Streak-1 (2019-04-26)
+  description: 'Auto-discovered: rank 1 longest negative streak (23 intervals)'
+  start: '2019-04-26T08:00:00+00:00'
+  end: '2019-05-03T16:00:00+00:00'
+  premium_train_end: '2019-04-25T08:00:00+00:00'
+  metric_value: 23
+- name: Longest-Streak-2 (2022-11-09)
+  description: 'Auto-discovered: rank 2 longest negative streak (21 intervals)'
+  start: '2022-11-09T16:00:00+00:00'
+  end: '2022-11-16T08:00:00+00:00'
+  premium_train_end: '2022-11-08T16:00:00+00:00'
+  metric_value: 21
+- name: Longest-Streak-3 (2021-06-23)
+  description: 'Auto-discovered: rank 3 longest negative streak (17 intervals)'
+  start: '2021-06-23T00:00:00+00:00'
+  end: '2021-06-28T08:00:00+00:00'
+  premium_train_end: '2021-06-22T00:00:00+00:00'
+  metric_value: 17
+- name: Longest-Streak-4 (2019-03-12)
+  description: 'Auto-discovered: rank 4 longest negative streak (15 intervals)'
+  start: '2019-03-12T00:00:00+00:00'
+  end: '2019-03-16T16:00:00+00:00'
+  premium_train_end: '2019-03-11T00:00:00+00:00'
+  metric_value: 15
+- name: Longest-Streak-5 (2020-03-16)
+  description: 'Auto-discovered: rank 5 longest negative streak (14 intervals)'
+  start: '2020-03-16T16:00:00+00:00'
+  end: '2020-03-21T00:00:00+00:00'
+  premium_train_end: '2020-03-15T16:00:00+00:00'
+  metric_value: 14
+events_bitmex:
+- name: Worst-Lambda-1 (2017-06-14)
+  description: 'Auto-discovered: rank 1 worst 30d window by aggregate loss (Lambda=0.098964)'
+  start: '2017-06-14T20:00:00+00:00'
+  end: '2017-07-14T12:00:00+00:00'
+  premium_train_end: '2017-06-13T20:00:00+00:00'
+  metric_value: 0.09896400000000001
+- name: Worst-Lambda-2 (2017-06-15)
+  description: 'Auto-discovered: rank 2 worst 30d window by aggregate loss (Lambda=0.097988)'
+  start: '2017-06-15T04:00:00+00:00'
+  end: '2017-07-14T20:00:00+00:00'
+  premium_train_end: '2017-06-14T04:00:00+00:00'
+  metric_value: 0.097988
+- name: Worst-Lambda-3 (2017-06-14)
+  description: 'Auto-discovered: rank 3 worst 30d window by aggregate loss (Lambda=0.097376)'
+  start: '2017-06-14T12:00:00+00:00'
+  end: '2017-07-14T04:00:00+00:00'
+  premium_train_end: '2017-06-13T12:00:00+00:00'
+  metric_value: 0.097376
+- name: Worst-Lambda-4 (2017-06-15)
+  description: 'Auto-discovered: rank 4 worst 30d window by aggregate loss (Lambda=0.096862)'
+  start: '2017-06-15T12:00:00+00:00'
+  end: '2017-07-15T04:00:00+00:00'
+  premium_train_end: '2017-06-14T12:00:00+00:00'
+  metric_value: 0.09686199999999998
+- name: Worst-Lambda-5 (2017-06-12)
+  description: 'Auto-discovered: rank 5 worst 30d window by aggregate loss (Lambda=0.095650)'
+  start: '2017-06-12T20:00:00+00:00'
+  end: '2017-07-12T12:00:00+00:00'
+  premium_train_end: '2017-06-11T20:00:00+00:00'
+  metric_value: 0.09565
+- name: Longest-Streak-1 (2020-03-12)
+  description: 'Auto-discovered: rank 1 longest negative streak (42 intervals)'
+  start: '2020-03-12T20:00:00+00:00'
+  end: '2020-03-26T12:00:00+00:00'
+  premium_train_end: '2020-03-11T20:00:00+00:00'
+  metric_value: 42
+- name: Longest-Streak-2 (2019-04-23)
+  description: 'Auto-discovered: rank 2 longest negative streak (31 intervals)'
+  start: '2019-04-23T12:00:00+00:00'
+  end: '2019-05-03T12:00:00+00:00'
+  premium_train_end: '2019-04-22T12:00:00+00:00'
+  metric_value: 31
+- name: Longest-Streak-3 (2017-07-26)
+  description: 'Auto-discovered: rank 3 longest negative streak (27 intervals)'
+  start: '2017-07-26T04:00:00+00:00'
+  end: '2017-08-03T20:00:00+00:00'
+  premium_train_end: '2017-07-25T04:00:00+00:00'
+  metric_value: 27
+- name: Longest-Streak-4 (2017-03-17)
+  description: 'Auto-discovered: rank 4 longest negative streak (26 intervals)'
+  start: '2017-03-17T20:00:00+00:00'
+  end: '2017-03-26T04:00:00+00:00'
+  premium_train_end: '2017-03-16T20:00:00+00:00'
+  metric_value: 26
+- name: Longest-Streak-5 (2017-04-02)
+  description: 'Auto-discovered: rank 5 longest negative streak (24 intervals)'
+  start: '2017-04-02T04:00:00+00:00'
+  end: '2017-04-09T20:00:00+00:00'
+  premium_train_end: '2017-04-01T04:00:00+00:00'
+  metric_value: 24
+events_deribit:
+- name: Worst-Lambda-1 (2020-03-12)
+  description: 'Auto-discovered: rank 1 worst 30d window by aggregate loss (Lambda=0.034858)'
+  start: '2020-03-12T16:00:00+00:00'
+  end: '2020-04-11T08:00:00+00:00'
+  premium_train_end: '2020-03-11T16:00:00+00:00'
+  metric_value: 0.034857895595216196
+- name: Worst-Lambda-2 (2020-03-12)
+  description: 'Auto-discovered: rank 2 worst 30d window by aggregate loss (Lambda=0.034730)'
+  start: '2020-03-12T08:00:00+00:00'
+  end: '2020-04-11T00:00:00+00:00'
+  premium_train_end: '2020-03-11T08:00:00+00:00'
+  metric_value: 0.034730211517819604
+- name: Worst-Lambda-3 (2020-03-12)
+  description: 'Auto-discovered: rank 3 worst 30d window by aggregate loss (Lambda=0.034432)'
+  start: '2020-03-12T00:00:00+00:00'
+  end: '2020-04-10T16:00:00+00:00'
+  premium_train_end: '2020-03-11T00:00:00+00:00'
+  metric_value: 0.034432156138864405
+- name: Worst-Lambda-4 (2020-03-11)
+  description: 'Auto-discovered: rank 4 worst 30d window by aggregate loss (Lambda=0.034330)'
+  start: '2020-03-11T16:00:00+00:00'
+  end: '2020-04-10T08:00:00+00:00'
+  premium_train_end: '2020-03-10T16:00:00+00:00'
+  metric_value: 0.034329549430515756
+- name: Worst-Lambda-5 (2020-03-07)
+  description: 'Auto-discovered: rank 5 worst 30d window by aggregate loss (Lambda=0.034282)'
+  start: '2020-03-07T08:00:00+00:00'
+  end: '2020-04-06T00:00:00+00:00'
+  premium_train_end: '2020-03-06T08:00:00+00:00'
+  metric_value: 0.034282310818710054
+- name: Longest-Streak-1 (2022-11-30)
+  description: 'Auto-discovered: rank 1 longest negative streak (68 intervals)'
+  start: '2022-11-30T16:00:00+00:00'
+  end: '2022-12-23T00:00:00+00:00'
+  premium_train_end: '2022-11-29T16:00:00+00:00'
+  metric_value: 68
+- name: Longest-Streak-2 (2020-03-16)
+  description: 'Auto-discovered: rank 2 longest negative streak (51 intervals)'
+  start: '2020-03-16T08:00:00+00:00'
+  end: '2020-04-02T00:00:00+00:00'
+  premium_train_end: '2020-03-15T08:00:00+00:00'
+  metric_value: 51
+- name: Longest-Streak-3 (2022-11-09)
+  description: 'Auto-discovered: rank 3 longest negative streak (48 intervals)'
+  start: '2022-11-09T00:00:00+00:00'
+  end: '2022-11-24T16:00:00+00:00'
+  premium_train_end: '2022-11-08T00:00:00+00:00'
+  metric_value: 48
+- name: Longest-Streak-4 (2022-09-13)
+  description: 'Auto-discovered: rank 4 longest negative streak (46 intervals)'
+  start: '2022-09-13T16:00:00+00:00'
+  end: '2022-09-28T16:00:00+00:00'
+  premium_train_end: '2022-09-12T16:00:00+00:00'
+  metric_value: 46
+- name: Longest-Streak-5 (2021-06-16)
+  description: 'Auto-discovered: rank 5 longest negative streak (40 intervals)'
+  start: '2021-06-16T00:00:00+00:00'
+  end: '2021-06-29T00:00:00+00:00'
+  premium_train_end: '2021-06-15T00:00:00+00:00'
+  metric_value: 40
+events_binance:
+- name: Worst-Lambda-1 (2021-05-19)
+  description: 'Auto-discovered: rank 1 worst 30d window by aggregate loss (Lambda=0.008130)'
+  start: '2021-05-19T16:00:00+00:00'
+  end: '2021-06-18T08:00:00+00:00'
+  premium_train_end: '2021-05-18T16:00:00+00:00'
+  metric_value: 0.00812978
+- name: Worst-Lambda-2 (2021-05-19)
+  description: 'Auto-discovered: rank 2 worst 30d window by aggregate loss (Lambda=0.007926)'
+  start: '2021-05-19T08:00:00+00:00'
+  end: '2021-06-18T00:00:00+00:00'
+  premium_train_end: '2021-05-18T08:00:00+00:00'
+  metric_value: 0.00792579
+- name: Worst-Lambda-3 (2021-05-18)
+  description: 'Auto-discovered: rank 3 worst 30d window by aggregate loss (Lambda=0.007574)'
+  start: '2021-05-18T16:00:00+00:00'
+  end: '2021-06-17T08:00:00+00:00'
+  premium_train_end: '2021-05-17T16:00:00+00:00'
+  metric_value: 0.00757419
+- name: Worst-Lambda-4 (2021-05-19)
+  description: 'Auto-discovered: rank 4 worst 30d window by aggregate loss (Lambda=0.007574)'
+  start: '2021-05-19T00:00:00+00:00'
+  end: '2021-06-17T16:00:00+00:00'
+  premium_train_end: '2021-05-18T00:00:00+00:00'
+  metric_value: 0.00757419
+- name: Worst-Lambda-5 (2021-05-18)
+  description: 'Auto-discovered: rank 5 worst 30d window by aggregate loss (Lambda=0.007507)'
+  start: '2021-05-18T08:00:00+00:00'
+  end: '2021-06-17T00:00:00+00:00'
+  premium_train_end: '2021-05-17T08:00:00+00:00'
+  metric_value: 0.00750687
+- name: Longest-Streak-1 (2022-06-13)
+  description: 'Auto-discovered: rank 1 longest negative streak (23 intervals)'
+  start: '2022-06-13T08:00:00+00:00'
+  end: '2022-06-20T16:00:00+00:00'
+  premium_train_end: '2022-06-12T08:00:00+00:00'
+  metric_value: 23
+- name: Longest-Streak-2 (2022-08-27)
+  description: 'Auto-discovered: rank 2 longest negative streak (12 intervals)'
+  start: '2022-08-27T00:00:00+00:00'
+  end: '2022-08-30T16:00:00+00:00'
+  premium_train_end: '2022-08-26T00:00:00+00:00'
+  metric_value: 12
+- name: Longest-Streak-3 (2023-03-10)
+  description: 'Auto-discovered: rank 3 longest negative streak (10 intervals)'
+  start: '2023-03-10T16:00:00+00:00'
+  end: '2023-03-13T16:00:00+00:00'
+  premium_train_end: '2023-03-09T16:00:00+00:00'
+  metric_value: 10
+- name: Longest-Streak-4 (2025-04-30)
+  description: 'Auto-discovered: rank 4 longest negative streak (10 intervals)'
+  start: '2025-04-30T16:00:00+00:00'
+  end: '2025-05-03T16:00:00+00:00'
+  premium_train_end: '2025-04-29T16:00:00+00:00'
+  metric_value: 10
+- name: Longest-Streak-5 (2022-06-03)
+  description: 'Auto-discovered: rank 5 longest negative streak (9 intervals)'
+  start: '2022-06-03T00:00:00+00:00'
+  end: '2022-06-05T16:00:00+00:00'
+  premium_train_end: '2022-06-02T00:00:00+00:00'
+  metric_value: 9
