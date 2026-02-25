@@ -1,16 +1,16 @@
-# DDX: Option-Style Derivatives for Perpetual Funding-Rate Risk
+# DDX Equalization-Rate Options Design
 
-Quantitative design, calibration, and pricing of new option-style derivatives that hedge the tail risk of perpetual-swap funding for short-perp positions (e.g., Ethena-style reserve management). This work builds the empirical case that structured products — not just linear hedges — are the right tool for managing funding-rate exposure, and provides the pricing and risk framework to evaluate them.
+Quantitative design and analysis of new option-style derivatives for hedging perpetual futures equalization-rates, compared against existing on-chain derivatives e.g. linear hedges (swaps/futures).
 
-**[Technical Specifications of All Derivatives](docs/Technical_Specifications.md)** — full mathematical definitions, parameters, calibration methodology, and design rationale.
+**[Technical Specifications of all Derivatives](https://hackmd.io/@Omv7qL5_Q-SAKHCU75SPHw/HJnvGo5_Wl)** — full mathematical definitions, parameters, calibration methodology, and design rationale for every instrument designed and analyzed.
 
----
+Synthetic dollar stablecoin protocols like Ethena hold delta-neutral short-perp positions that receive funding when positive (set via the equalization-rates AKA "funding rates" by the respective exchange) and pay funding when negative. They manage negative-funding risk with reserve funds (though recently, companies like Pendle have publicly claimed to support Ethena's hedging needs via their interest rate swaps (Boros) protocol). 
 
-## The Problem
+The question is: **what is the most capital-efficient way to protect against this tail risk?**
 
-Synthetic dollar stablecoin protocols hold delta-neutral short-perp positions that receive funding when positive and pay funding when negative. Negative funding drains reserves. The question is: **what is the most capital-efficient way to protect against this tail risk?**
+Linear hedges (rate swaps) eliminate variance but sacrifice upside — the holder gives up (part of) the ~81.6% of intervals where funding is positive. Option-style products can provide downside protection while preserving upside, but only if they're correctly structured, parameterized, and priced.
 
-Linear hedges (funding-rate swaps) eliminate variance but sacrifice upside — the holder gives up the ~81.6% of intervals where funding is positive. Option-style products can provide downside protection while preserving upside, but only if they're correctly structured, parameterized, and priced.
+This repo builds the empirical evidence: historical equalization-rate data across four exchanges, calibrated product parameters, and various pricing/risk frameworks to evaluate each derivative's cost and tail-risk reduction. 
 
 ## The Products
 
@@ -20,68 +20,50 @@ Linear hedges (funding-rate swaps) eliminate variance but sacrifice upside — t
 | **Distress-Activated Floor (DAF)** | Floor that only activates after `m` consecutive bad intervals | Filters short noise; pays only during sustained distress. 34–43% cheaper than the full floor. |
 | **Aggregate Stop-Loss (ASL)** | Pays `max(0, Λ - D)` on total period loss | Reinsurance-style tail layer. Highest efficiency per premium dollar (sharpness 1.39 vs ~1.24 for Floor/DAF). |
 
-All parameters are empirically calibrated from 7.3 years of Bybit BTCUSD 8-hour funding data, with cross-venue validation on BitMEX, Binance, and Deribit. See [Technical Specifications](docs/Technical_Specifications.md) for precise definitions.
+All parameters are empirically calibrated from 7.3 years of Bybit BTCUSD 8-hour funding data, with cross-venue validation on BitMEX, Binance, and Deribit. See the DDX Technical Specifications for precise definitions.
 
-## Key Findings
+## Results
 
-### Funding-rate empirical properties
+### What the rate data shows
 
-- **81.6% of Bybit intervals are non-negative.** Negative funding is the minority — but tail losses are severe (excess kurtosis ~37).
-- **Three exchanges share a discrete base rate at 0.0001/8h** (10.95% APR). Deribit is structurally different and requires separate calibration.
-- **Funding-rate persistence is heavier than geometric.** Negative streaks last longer than a memoryless model predicts — the phenomenon that makes the DAF economically meaningful.
+Analysis of 7.3 years of 8-hour equalization-rate data across four exchanges (Bybit primary, BitMEX/Binance/Deribit for cross-venue validation) reveals three properties that shape the product design:
 
-### Premium surfaces and pricing uncertainty
+**Tail severity.** Only 18.4% of intervals are negative, but loss magnitude is extreme — excess kurtosis ~37, and fitting a GPD to stress-regime losses gives shape ξ = 0.124 > 0, a heavy Fréchet-type tail with no finite upper bound. Reserve-only strategies underestimate the worst outcomes.
 
-- **Risk load dominates loaded premiums at 4.4x the pure premium** (30d Floor d=0). On synthetic data, this ratio was 1–2x. Real-data tails are far heavier than any diffusion model would suggest.
-- **Bootstrap CIs are 66–144% of the point estimate.** Loaded premium surfaces are not quotable in any tight sense. This is not a methodology artifact — block-size sensitivity analysis confirms CIs are stable across block sizes {30, 60, 90, 180, 270} in 16/18 product-horizon combinations.
-- **The CVaR(1%) risk-load estimator drives 82% of the CI width.** The remaining 18% comes from pure premium and capital charge.
-- **Nonstationarity is the dominant uncertainty driver.** Premiums computed on 2-year rolling windows vary by 194–302% (range/mean) across different eras. Crisis-containing periods produce premiums 10–30x higher than benign periods. The funding-rate process is not approximately stationary.
-- **ASL q95 at 90d is formally unquotable** — the bootstrap CI lower bound is exactly 0% (9% of resamples produce zero payoff because only 6 of 88 30-day blocks contain enough loss to breach the q95 threshold).
+**Persistence.** Losses don't arrive as isolated one-off intervals, they cluster into multi-interval episodes. This is what makes a persistence-gated product (DAF) viable as the gate filters noise without missing real distress.
 
-### Product comparison (30d horizon, CVaR-loaded premium)
+**Nonstationarity.** The rate process switches between distinct calm and stress regimes. This shows up later as the dominant challenge for pricing, but it's visible already in the raw data.
 
-| Product | Loaded (% notional) | Sharpness | Activation | Savings vs Floor d=0 |
-|---------|--------------------:|----------:|-----------:|---------------------:|
-| Floor d=0 (benchmark) | 1.525 | 1.24 | 88.0% | — |
-| Floor d=0.0001 | 1.311 | 1.23 | 66.3% | 14.0% |
-| DAF m=3 | 0.864 | 1.21 | 24.5% | 43.3% |
-| ASL q90 | 1.102 | **1.39** | 10.0% | 27.7% |
+All product parameters were calibrated directly from these empirical properties with conditional loss quantiles for the Floor deductible, aggregate-loss quantiles for the ASL attachment point, and activation-frequency analysis for the DAF streak threshold.
 
-Sharpness = |CVaR improvement| / premium. ASL q90 delivers the most tail-risk reduction per dollar of premium. DAF m=3 is the cheapest product with meaningful protection.
+### What the products can cost
 
-## Approach
+Computing loaded premiums (pure premium + CVaR-based risk load + capital charge) on the historical data at a 30d horizon gives: Floor d=0 at 1.53% of notional, DAF m=3 at 0.86%, ASL q90 at 1.10%. DAF is 43% cheaper than the benchmark floor. ASL has the highest sharpness (|ΔCVaR₁%| / premium = 1.39 vs ~1.24 for Floor and DAF) i.e. it delivers the most tail protection per premium dollar because it concentrates payoff into the worst 10% of windows.
 
-The work proceeds through a sequence of empirical analyses, each building on the previous:
+The difficult finding was that risk load is 4.4× the pure premium on real data. The loaded premium is overwhelmingly driven by the CVaR(1%) estimator — the average of the worst ~76 payoff windows out of ~7,600. This makes bootstrap confidence intervals ridiculously wide: 66–144% of the point estimate. The premium surface is not quotable in a tight sense.
 
-1. **Pipeline validation** on synthetic two-regime Markov data (confirms payoff functions, premium decomposition, and hedge comparison framework work correctly).
-2. **Descriptive funding analytics** across four exchanges (characterizes regimes, persistence, tails, cross-venue structure).
-3. **Parameter calibration** using conditional loss quantiles, aggregate loss distributions, and activation frequency analysis (freezes all product parameters empirically).
-4. **Premium surfaces** with full decomposition (pure + risk load + capital charge) and block-bootstrap uncertainty quantification.
-5. **CI diagnostics** — block-size sensitivity, component-wise CI decomposition, and subsample dispersion (diagnoses that wide CIs are a data limitation + nonstationarity, not a methodology artifact).
-6. **Alternative pricing functionals** (Wang distortion, Esscher transform) to test whether product rankings are robust to the choice of risk-loading principle.
-7. **Regime-switching + EVT model** to produce smoother, regime-conditional premiums from a calibrated generative model.
-8. **Uncertainty-aware hedge-efficiency frontiers** presenting all product comparisons as distributions with confidence bands.
+This requires immediate confirmation: is the wide CI a methodology problem (wrong bootstrap block size, wrong pricing functional) or a data problem?
+
+### Diagnosing the uncertainty
+
+Three diagnostics were run to answer this. First, the bootstrap was re-run at five different block sizes (30 to 270 intervals). CI widths were stable in 16 of 18 product-horizon combinations, so the block size doesn't matter. Second, the CI was decomposed by premium component: the risk-load component accounting for 82% of the total CI width, confirms that the CVaR estimator is the bottleneck. Third, premiums were computed on rolling 2-year contiguous windows slid through the history, measuring how much the premium itself changes across eras. The answer: **10–30×**. Premiums on benign periods (2023–2025) are an order of magnitude lower than premiums on crisis-containing periods (2019–2021).
+
+So wide CIs are driven by nonstationarity, not methodology. The rate process has distinct regimes, and 7.3 years contains only a handful of independent regime transitions.
+
+### What holds up so far
+
+To test whether the product rankings (as opposed to absolute premium levels) are fair, premiums were recomputed under different pricing methods: CVaR-loaded, Wang distortion (θ = 0.3, 0.5, 0.8), Esscher transform (θ = 0.5, 1.0, 2.0), and target-Sharpe. **Every ranking — cheapest to most expensive, highest to lowest sharpness — is identical across all 9 methods.** No ranking flips. ASL is always the most efficient, DAF is always the cheapest option product, Floor is always the most expensive. 
+
+Finally, a 2-state Markov regime model with GPD tail augmentation was built to generate 200 years of synthetic history respecting the empirical regime structure. This tightens premium estimates ~2× for Floor and DAF products (MC coefficient of variation 8–33% vs bootstrap CI width 66–120%). For ASL, the model underestimates aggregate loss concentration within crisis episodes (as a result of i.i.d. emissions within each state), so the model-based ASL premium serves as a lower bound alongside the historical upper bound.
 
 ## Notebooks
 
-| # | Notebook | Purpose |
-|---|----------|---------|
-| 01 | `01_synthetic_sanity` | Pipeline validation on synthetic data |
-| 02 | `02_funding_descriptives` | Empirical characterization of funding rates (4 venues) |
-| 03 | `03_calibration` | Parameter calibration and frozen baseline parameters |
-| 04 | `04_premium_surfaces` | Premium sweeps, decomposition, bootstrap CIs, quote sheets |
+| # | Notebook | What it establishes |
+|---|----------|---------------------|
+| 01 | `01_synthetic_sanity` | Pipeline correctness on synthetic two-regime Markov data |
+| 02 | `02_funding_descriptives` | Empirical regime structure, persistence, tails across 4 venues |
+| 03 | `03_calibration` | Frozen product parameters from conditional loss and activation analysis |
+| 04 | `04_premium_surfaces` | Premium decomposition, parameter sweeps, bootstrap CIs, quote sheets |
 | 04b | `04b_ci_diagnostics` | Block-size sensitivity, component CIs, subsample dispersion |
-| 04c | `04c_pricing_functionals` | Wang/Esscher pricing comparison (in progress) |
-| 05 | `05_model_validation` | Regime-EVT model fitting and validation (planned) |
-| 06 | `06_hedge_frontiers` | Uncertainty-aware product comparison (planned) |
-
-## Repository Structure
-
-```
-src/ddx/          Core library: payoffs, pricing, risk metrics, bootstrap, calibration, visualization
-notebooks/        Analysis notebooks (the primary research output)
-configs/          Product parameters, analysis settings, stress events
-docs/             Technical specifications, implementation reports, master plan
-reports/          Generated tables (CSV) and figures (PNG)
-tests/            92 unit tests
-```
+| 04c | `04c_pricing_functionals` | Robustness of rankings across Wang/Esscher/CVaR/Sharpe pricing |
+| 05 | `05_model_validation` | Regime-EVT model calibration, validation, model-based premiums |
