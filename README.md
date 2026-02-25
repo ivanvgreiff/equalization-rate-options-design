@@ -1,67 +1,87 @@
-# DDX Funding-Rate Options Analysis
+# DDX: Option-Style Derivatives for Perpetual Funding-Rate Risk
 
-Quantitative analysis of option-style derivatives for hedging perpetual futures funding-rate risk, compared against linear hedges (swaps/futures) offered by existing protocols in 2026.
+Quantitative design, calibration, and pricing of new option-style derivatives that hedge the tail risk of perpetual-swap funding for short-perp positions (e.g., Ethena-style reserve management). This work builds the empirical case that structured products — not just linear hedges — are the right tool for managing funding-rate exposure, and provides the pricing and risk framework to evaluate them.
 
-**[Technical Specifications of all derivatives](https://hackmd.io/@Omv7qL5_Q-SAKHCU75SPHw/HJnvGo5_Wl)** — full mathematical definitions, parameters, calibration methodology, and design rationale for every instrument analyzed.
+**[Technical Specifications of All Derivatives](docs/Technical_Specifications.md)** — full mathematical definitions, parameters, calibration methodology, and design rationale.
 
-Synthetic dollar stablecoin protocols like Ethena hold delta-neutral short-perp positions that receive funding when positive and pay funding when negative. They manage negative-funding risk with reserve funds. DDX proposes that option-style derivatives are more capital-efficient than reserves or other existing on-chain rate-derivatives for hedging this tail risk.
+---
 
-This repo builds the empirical evidence: historical funding-rate data across four exchanges, calibrated product parameters, and a pricing/risk framework to evaluate each derivative's cost and tail-risk reduction.
+## The Problem
 
-## Core Products
+Synthetic dollar stablecoin protocols hold delta-neutral short-perp positions that receive funding when positive and pay funding when negative. Negative funding drains reserves. The question is: **what is the most capital-efficient way to protect against this tail risk?**
 
-| Product | Idea |
-|---------|------|
-| **Vanilla Funding Floor** | Full insurance against negative funding (benchmark — upper bound on cost) |
-| **Distress-Activated Floor (DAF)** | Only pays after sustained distress (m consecutive bad intervals). Cheaper than the full floor. |
-| **Aggregate Stop-Loss (ASL)** | "My reserve absorbs the first D of losses; insure me beyond that." Highest efficiency per premium dollar. |
-| **Swap** (benchmark) | Linear hedge — locks funding at a fixed rate. Eliminates variance but sacrifices upside. |
+Linear hedges (funding-rate swaps) eliminate variance but sacrifice upside — the holder gives up the ~81.6% of intervals where funding is positive. Option-style products can provide downside protection while preserving upside, but only if they're correctly structured, parameterized, and priced.
 
-## Key Empirical Findings
+## The Products
 
-**Data:** Bybit BTCUSD inverse perpetual (primary), plus BitMEX, Deribit, and Binance for cross-venue validation. ~7 years of 8-hour funding-rate history.
+| Product | Structure | Design Rationale |
+|---------|-----------|-----------------|
+| **Vanilla Floor** | Pays `max(0, -f_i - d)` per interval | Full insurance benchmark; upper bound on cost |
+| **Distress-Activated Floor (DAF)** | Floor that only activates after `m` consecutive bad intervals | Filters short noise; pays only during sustained distress. 34–43% cheaper than the full floor. |
+| **Aggregate Stop-Loss (ASL)** | Pays `max(0, Λ - D)` on total period loss | Reinsurance-style tail layer. Highest efficiency per premium dollar (sharpness 1.39 vs ~1.24 for Floor/DAF). |
 
-- **81.6% of funding intervals are non-negative** on Bybit. Negative funding is the minority — but when it hits, it hits hard (excess kurtosis ~37, heavy tails).
-- **Three exchanges share a discrete base rate at 0.0001 per 8h** (10.95% APR). Deribit is structurally different (no base rate, no cap, left-skewed). Parameters calibrated on base-rate venues do not transfer to Deribit.
-- **Funding-rate persistence is heavier than geometric** — streaks of negative funding last longer than a memoryless model would predict. This is the phenomenon that makes persistence-gated products (DAF) economically meaningful.
-- **ASL deductible D = q90(Λ)** per horizon positions the product as a reinsurance tail layer, activating in ~10% of rolling windows.
-- **DAF with m=3 (24h sustained distress)** activates in ~25% of 30-day windows — frequent enough to provide real protection, rare enough to be meaningfully cheaper than the vanilla floor.
+All parameters are empirically calibrated from 7.3 years of Bybit BTCUSD 8-hour funding data, with cross-venue validation on BitMEX, Binance, and Deribit. See [Technical Specifications](docs/Technical_Specifications.md) for precise definitions.
 
-## Quick Start
+## Key Findings
 
-```bash
-pip install -e ".[dev]"
-pytest
+### Funding-rate empirical properties
+
+- **81.6% of Bybit intervals are non-negative.** Negative funding is the minority — but tail losses are severe (excess kurtosis ~37).
+- **Three exchanges share a discrete base rate at 0.0001/8h** (10.95% APR). Deribit is structurally different and requires separate calibration.
+- **Funding-rate persistence is heavier than geometric.** Negative streaks last longer than a memoryless model predicts — the phenomenon that makes the DAF economically meaningful.
+
+### Premium surfaces and pricing uncertainty
+
+- **Risk load dominates loaded premiums at 4.4x the pure premium** (30d Floor d=0). On synthetic data, this ratio was 1–2x. Real-data tails are far heavier than any diffusion model would suggest.
+- **Bootstrap CIs are 66–144% of the point estimate.** Loaded premium surfaces are not quotable in any tight sense. This is not a methodology artifact — block-size sensitivity analysis confirms CIs are stable across block sizes {30, 60, 90, 180, 270} in 16/18 product-horizon combinations.
+- **The CVaR(1%) risk-load estimator drives 82% of the CI width.** The remaining 18% comes from pure premium and capital charge.
+- **Nonstationarity is the dominant uncertainty driver.** Premiums computed on 2-year rolling windows vary by 194–302% (range/mean) across different eras. Crisis-containing periods produce premiums 10–30x higher than benign periods. The funding-rate process is not approximately stationary.
+- **ASL q95 at 90d is formally unquotable** — the bootstrap CI lower bound is exactly 0% (9% of resamples produce zero payoff because only 6 of 88 30-day blocks contain enough loss to breach the q95 threshold).
+
+### Product comparison (30d horizon, CVaR-loaded premium)
+
+| Product | Loaded (% notional) | Sharpness | Activation | Savings vs Floor d=0 |
+|---------|--------------------:|----------:|-----------:|---------------------:|
+| Floor d=0 (benchmark) | 1.525 | 1.24 | 88.0% | — |
+| Floor d=0.0001 | 1.311 | 1.23 | 66.3% | 14.0% |
+| DAF m=3 | 0.864 | 1.21 | 24.5% | 43.3% |
+| ASL q90 | 1.102 | **1.39** | 10.0% | 27.7% |
+
+Sharpness = |CVaR improvement| / premium. ASL q90 delivers the most tail-risk reduction per dollar of premium. DAF m=3 is the cheapest product with meaningful protection.
+
+## Approach
+
+The work proceeds through a sequence of empirical analyses, each building on the previous:
+
+1. **Pipeline validation** on synthetic two-regime Markov data (confirms payoff functions, premium decomposition, and hedge comparison framework work correctly).
+2. **Descriptive funding analytics** across four exchanges (characterizes regimes, persistence, tails, cross-venue structure).
+3. **Parameter calibration** using conditional loss quantiles, aggregate loss distributions, and activation frequency analysis (freezes all product parameters empirically).
+4. **Premium surfaces** with full decomposition (pure + risk load + capital charge) and block-bootstrap uncertainty quantification.
+5. **CI diagnostics** — block-size sensitivity, component-wise CI decomposition, and subsample dispersion (diagnoses that wide CIs are a data limitation + nonstationarity, not a methodology artifact).
+6. **Alternative pricing functionals** (Wang distortion, Esscher transform) to test whether product rankings are robust to the choice of risk-loading principle.
+7. **Regime-switching + EVT model** to produce smoother, regime-conditional premiums from a calibrated generative model.
+8. **Uncertainty-aware hedge-efficiency frontiers** presenting all product comparisons as distributions with confidence bands.
+
+## Notebooks
+
+| # | Notebook | Purpose |
+|---|----------|---------|
+| 01 | `01_synthetic_sanity` | Pipeline validation on synthetic data |
+| 02 | `02_funding_descriptives` | Empirical characterization of funding rates (4 venues) |
+| 03 | `03_calibration` | Parameter calibration and frozen baseline parameters |
+| 04 | `04_premium_surfaces` | Premium sweeps, decomposition, bootstrap CIs, quote sheets |
+| 04b | `04b_ci_diagnostics` | Block-size sensitivity, component CIs, subsample dispersion |
+| 04c | `04c_pricing_functionals` | Wang/Esscher pricing comparison (in progress) |
+| 05 | `05_model_validation` | Regime-EVT model fitting and validation (planned) |
+| 06 | `06_hedge_frontiers` | Uncertainty-aware product comparison (planned) |
+
+## Repository Structure
+
 ```
-
-**Data pipeline** (requires internet):
-```bash
-python scripts/fetch_bybit.py
-python scripts/fetch_bitmex.py
-python scripts/fetch_deribit.py
-python scripts/fetch_binance.py
-python scripts/build_dataset.py --venue bybit
-python scripts/build_dataset.py --venue bitmex
-python scripts/build_dataset.py --venue deribit
-python scripts/build_dataset.py --venue binance
-```
-
-**Notebooks** (open in Jupyter/VS Code):
-| Notebook | Phase | What it does |
-|----------|-------|-------------|
-| `01_synthetic_sanity.ipynb` | 2 | Validates payoff functions on synthetic two-regime Markov data |
-| `02_funding_descriptives.ipynb` | 4 | Full statistical characterization of funding rates across 4 venues |
-| `03_calibration.ipynb` | 5 | Freezes baseline parameters for all products using empirical calibration |
-
-## Repo Structure
-
-```
-configs/        Analysis parameters, contract grids, stress events
-data/           Raw CSVs (gitignored), processed parquets (gitignored), committed samples
-docs/           Technical specs, implementation reports, master plan
-notebooks/      Analysis and presentation (no business logic)
-reports/        Generated figures, tables, markdown QA reports
-scripts/        Data fetching, processing, and analysis entry points
-src/ddx/        Core library (payoffs, pricing, risk, backtest, calibration, viz, utils)
-tests/          Unit tests (81 tests)
+src/ddx/          Core library: payoffs, pricing, risk metrics, bootstrap, calibration, visualization
+notebooks/        Analysis notebooks (the primary research output)
+configs/          Product parameters, analysis settings, stress events
+docs/             Technical specifications, implementation reports, master plan
+reports/          Generated tables (CSV) and figures (PNG)
+tests/            92 unit tests
 ```

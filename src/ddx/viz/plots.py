@@ -262,6 +262,121 @@ def plot_top_episodes(
     return fig
 
 
+def plot_premium_decomposition(
+    param_values: list,
+    decompositions: list[dict],
+    param_name: str = "Parameter",
+    title: str = "Premium Decomposition",
+    save_path: str | Path | None = None,
+    param_labels: list[str] | None = None,
+) -> plt.Figure:
+    """Stacked bar chart of premium decomposition across a parameter sweep.
+
+    decompositions : list of dicts with keys 'pure', 'risk_load', 'capital_charge'.
+    """
+    pures = [to_pct_notional(d["pure"]) for d in decompositions]
+    risk_loads = [to_pct_notional(d["risk_load"]) for d in decompositions]
+    cap_charges = [to_pct_notional(d["capital_charge"]) for d in decompositions]
+
+    x = np.arange(len(param_values))
+    width = 0.6
+
+    fig, ax = plt.subplots(figsize=(max(8, len(param_values) * 1.5), 5))
+    ax.bar(x, pures, width, label="Pure premium", color="#2196F3")
+    ax.bar(x, risk_loads, width, bottom=pures, label="Risk load", color="#FF9800")
+    bottoms = [p + r for p, r in zip(pures, risk_loads)]
+    ax.bar(x, cap_charges, width, bottom=bottoms, label="Capital charge", color="#4CAF50")
+
+    labels = param_labels if param_labels else [str(v) for v in param_values]
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels, fontsize=9)
+    ax.set_xlabel(param_name)
+    ax.set_ylabel("Premium (% of notional)")
+    ax.set_title(title)
+    ax.legend(fontsize=8)
+    ax.grid(axis="y", alpha=0.3)
+
+    fig.tight_layout()
+    if save_path:
+        Path(save_path).parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(save_path, dpi=150, bbox_inches="tight")
+    return fig
+
+
+def plot_premium_curve_with_ci(
+    param_values: list,
+    premiums: list[float],
+    ci_lower: list[float] | None = None,
+    ci_upper: list[float] | None = None,
+    param_name: str = "Parameter",
+    title: str = "Premium Curve",
+    save_path: str | Path | None = None,
+) -> plt.Figure:
+    """Line plot of premium vs parameter with optional CI band."""
+    prems_pct = [to_pct_notional(p) for p in premiums]
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.plot(param_values, prems_pct, "o-", color="#2196F3", linewidth=2, markersize=6)
+
+    if ci_lower is not None and ci_upper is not None:
+        lo = [to_pct_notional(v) for v in ci_lower]
+        hi = [to_pct_notional(v) for v in ci_upper]
+        ax.fill_between(param_values, lo, hi, alpha=0.2, color="#2196F3", label="90% CI")
+        ax.legend(fontsize=8)
+
+    ax.set_xlabel(param_name)
+    ax.set_ylabel("Total Premium (% of notional)")
+    ax.set_title(title)
+    ax.grid(alpha=0.3)
+
+    fig.tight_layout()
+    if save_path:
+        Path(save_path).parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(save_path, dpi=150, bbox_inches="tight")
+    return fig
+
+
+def plot_cross_product_comparison(
+    products: list[str],
+    premiums: list[float],
+    cvar_improvements: list[float],
+    sharpness_vals: list[float],
+    title: str = "Cross-Product Comparison (30d)",
+    save_path: str | Path | None = None,
+) -> plt.Figure:
+    """Grouped bar chart comparing premium, CVaR improvement, and sharpness."""
+    x = np.arange(len(products))
+    width = 0.35
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+    prems_pct = [to_pct_notional(p) for p in premiums]
+    cvar_pct = [to_pct_notional(c) for c in cvar_improvements]
+
+    axes[0].bar(x - width / 2, prems_pct, width, label="Premium", color="#2196F3")
+    axes[0].bar(x + width / 2, cvar_pct, width, label="CVaR improvement", color="#FF5722")
+    axes[0].set_xticks(x)
+    axes[0].set_xticklabels(products, fontsize=8, rotation=20, ha="right")
+    axes[0].set_ylabel("% of notional")
+    axes[0].set_title("Premium vs CVaR Improvement")
+    axes[0].legend(fontsize=8)
+    axes[0].grid(axis="y", alpha=0.3)
+
+    axes[1].bar(x, sharpness_vals, 0.5, color="#9C27B0")
+    axes[1].set_xticks(x)
+    axes[1].set_xticklabels(products, fontsize=8, rotation=20, ha="right")
+    axes[1].set_ylabel("Sharpness (|CVaR impr.| / premium)")
+    axes[1].set_title("Hedge Sharpness")
+    axes[1].grid(axis="y", alpha=0.3)
+
+    fig.suptitle(title, fontsize=13, y=1.02)
+    fig.tight_layout()
+    if save_path:
+        Path(save_path).parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(save_path, dpi=150, bbox_inches="tight")
+    return fig
+
+
 def plot_hedge_frontier(
     results: dict,
     x_key: str = "premium",
