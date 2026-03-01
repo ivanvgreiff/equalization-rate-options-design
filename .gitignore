@@ -6,6 +6,10 @@ data/processed/
 # Docs
 docs/
 
+# Notebooks
+notebooks/*.html
+notebooks/01_synthetic_sanity.ipynb
+
 # Reports artifacts (regenerable)
 reports/figures/*.png
 reports/figures/*.pdf

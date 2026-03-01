@@ -52,7 +52,7 @@ So wide CIs are driven by nonstationarity, not methodology. The rate process has
 
 ### What holds up so far
 
-To test whether the product rankings (as opposed to absolute premium levels) are fair, premiums were recomputed under different pricing methods: CVaR-loaded, Wang distortion (θ = 0.3, 0.5, 0.8), Esscher transform (θ = 0.5, 1.0, 2.0), and target-Sharpe. **Every ranking — cheapest to most expensive, highest to lowest sharpness — is identical across all 9 methods.** No ranking flips. ASL is always the most efficient, DAF is always the cheapest option product, Floor is always the most expensive. 
+To test whether the product rankings (as opposed to absolute premium levels) are robust, premiums were recomputed under 9 pricing methods: CVaR-loaded, Wang distortion (θ = 0.3, 0.5, 0.8), Esscher transform (θ = 0.5, 1.0, 2.0), and target-Sharpe. **ASL's sharpness advantage holds across all 9 methods.** The broad hierarchy (ASL/DAF cheaper and more efficient than Floor) is stable everywhere. The internal ordering of DAF m=2 vs ASL q90 shifts under CVaR loading — which penalizes ASL's concentrated tail payoffs more heavily — but the key conclusions are robust.
 
 Finally, a 2-state Markov regime model with GPD tail augmentation was built to generate 200 years of synthetic history respecting the empirical regime structure. This tightens premium estimates ~2× for Floor and DAF products (MC coefficient of variation 8–33% vs bootstrap CI width 66–120%). For ASL, the model underestimates aggregate loss concentration within crisis episodes (as a result of i.i.d. emissions within each state), so the model-based ASL premium serves as a lower bound alongside the historical upper bound.
 
