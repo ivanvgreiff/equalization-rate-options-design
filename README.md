@@ -58,15 +58,22 @@ To test whether the product rankings (as opposed to absolute premium levels) are
 
 A 2-state Markov regime model with GPD tail augmentation was built to generate long histories respecting the empirical regime structure. This tightens Floor/DAF premium estimates ~2× — but fails for ASL and DAF activation rates because i.i.d. emissions within each state destroy the within-episode severity correlation that drives these path-dependent payoffs.
 
-An **episode-based semi-Markov simulator** that resamples whole stress episodes (rather than individual intervals) fixes this structural failure, passing all 7 validation gates for DAF activation, ASL activation, and aggregate-loss quantiles. However, out-of-sample testing across eras reveals the model cannot predict across regimes (1/7 gates when training on early data and testing on late). This confirms that **nonstationarity — not model specification — is the dominant uncertainty**. The model is useful as a scenario generator, not a forward predictor.
+An **episode-based semi-Markov + EVT simulator** that resamples whole stress episodes (rather than individual intervals) fixes this structural failure, passing all 7 validation gates for DAF activation, ASL activation, and aggregate-loss quantiles. However, out-of-sample testing across eras reveals the model cannot predict across regimes (1/7 gates when training on early data and testing on late). This confirms that nonstationarity (not model specification) is the dominant uncertainty. The model is useful as a scenario generator, not a forward predictor.
 
 ### The hedge-efficiency frontier
 
 The definitive comparison uses hedge-ratio frontiers over $h \in [0,1]$ with formal capital efficiency metrics, validated by a 52-month walk-forward protocol. Premium is treated as a deterministic expense separate from stochastic reserve risk — the reserve covers only the residual loss after the hedge payoff.
 
-**The central finding:** at conventional cost-of-capital ($k = 10\%$), holding reserves costs only ~3 bps per 30d while option hedges cost 88–132 bps. Break-even $k^*$ is 450–530% annually. Options are not justified by capital savings alone — they are justified by **tail-risk aversion**: reducing worst-1% reserve draw from 3.7% to 0.5–1.8% of notional.
+**The central finding:** at conventional cost-of-capital ($k = 10\%$), holding reserves costs only ~3 bps per 30d while option hedges cost 88–132 bps. Break-even $k^*$ is 450–530% annually. Options are not justified by capital savings alone — they are justified by tail-risk aversion: reducing worst-1% reserve draw from 3.7% to 0.5–1.8% of notional.
 
 **Product ranking:** ASL q95 achieves the highest capital efficiency (Eff$_A$ = 2.70), stable across all pricing functionals. For protocols targeting CVaR $\leq$ 1.5%, only options can reach the required risk reduction (cheapest: ASL at ~85 bps). For targets $\geq$ 2.0%, a partial swap ($h \approx 0.3$) is cheapest because it diversifies without locking in stress-era rates.
+
+| Target CVaR | Minimum-Cost Strategy | Hedge Ratio | Cost (bps / 30d) |
+|---|---|---|---|
+| ≤ 0.75% | Floor d=0.0001 | 0.92 | 121 |
+| 1.0% | ASL q90 | 0.94 | 104 |
+| 1.5% | ASL q95 | 0.92 | 85 |
+| ≥ 2.0% | Swap (mean) | 0.40 | 2.6 |
 
 **Robustness:** Absolute premium levels are uncertain (era bands show 3–10× variation), but the ranking — ASL most efficient, swaps cheapest for relaxed targets — holds across bootstrap, era, and model uncertainty layers.
 
