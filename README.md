@@ -18,7 +18,7 @@ This repo builds the empirical evidence: historical equalization-rate data acros
 |---------|-----------|-----------------|
 | **Vanilla Floor** | Pays `max(0, -f_i - d)` per interval | Full insurance benchmark; upper bound on cost |
 | **Distress-Activated Floor (DAF)** | Floor that only activates after `m` consecutive bad intervals | Filters short noise; pays only during sustained distress. 34–43% cheaper than the full floor. |
-| **Aggregate Stop-Loss (ASL)** | Pays `max(0, Λ - D)` on total period loss | Reinsurance-style tail layer. Highest efficiency per premium dollar (sharpness 1.39 vs ~1.24 for Floor/DAF). |
+| **Aggregate Stop-Loss (ASL)** | Pays `max(0, Λ - D)` on total period loss | Reinsurance-style tail layer. **Highest capital efficiency** (Eff_A = 2.66–2.70 vs 2.31–2.45 for Floor/DAF across all pricing methods). |
 
 All parameters are empirically calibrated from 7.3 years of Bybit BTCUSD 8-hour funding data, with cross-venue validation on BitMEX, Binance, and Deribit. See the DDX Technical Specifications for precise definitions.
 
@@ -38,11 +38,11 @@ All product parameters were calibrated directly from these empirical properties 
 
 ### What the products can cost
 
-Computing loaded premiums (pure premium + CVaR-based risk load + capital charge) on the historical data at a 30d horizon gives: Floor d=0 at 1.53% of notional, DAF m=3 at 0.86%, ASL q90 at 1.10%. DAF is 43% cheaper than the benchmark floor. ASL has the highest sharpness (|ΔCVaR₁%| / premium = 1.39 vs ~1.24 for Floor and DAF) i.e. it delivers the most tail protection per premium dollar because it concentrates payoff into the worst 10% of windows.
+Loaded premiums (pure premium + CVaR-based risk load + capital charge) at a 30d horizon: Floor d=0.0001 at 1.31% of notional, DAF m=3 at 0.86%, ASL q90 at 1.10%. DAF is 34% cheaper than the floor. ASL has the highest capital efficiency (Eff_A = 2.66 — each unit of premium reduces required reserves by 2.66 units) because it concentrates payoff into the worst 10% of windows.
 
-The difficult finding was that risk load is 4.4× the pure premium on real data. The loaded premium is overwhelmingly driven by the CVaR(1%) estimator — the average of the worst ~76 payoff windows out of ~7,600. This makes bootstrap confidence intervals ridiculously wide: 66–144% of the point estimate. The premium surface is not quotable in a tight sense.
+The risk load is 7–22× the pure premium across products. The loaded premium is overwhelmingly driven by the CVaR(1%) estimator — the average of the worst ~76 payoff windows out of ~7,600. This makes bootstrap confidence intervals wide: 66–144% of the point estimate. The premium surface is not quotable in a tight sense.
 
-This requires immediate confirmation: is the wide CI a methodology problem (wrong bootstrap block size, wrong pricing functional) or a data problem?
+This requires confirmation: is the wide CI a methodology problem (wrong bootstrap block size, wrong pricing functional) or a data problem?
 
 ### Diagnosing the uncertainty
 
@@ -54,16 +54,33 @@ So wide CIs are driven by nonstationarity, not methodology. The rate process has
 
 To test whether the product rankings (as opposed to absolute premium levels) are robust, premiums were recomputed under 9 pricing methods: CVaR-loaded, Wang distortion (θ = 0.3, 0.5, 0.8), Esscher transform (θ = 0.5, 1.0, 2.0), and target-Sharpe. **ASL's sharpness advantage holds across all 9 methods.** The broad hierarchy (ASL/DAF cheaper and more efficient than Floor) is stable everywhere. The internal ordering of DAF m=2 vs ASL q90 shifts under CVaR loading — which penalizes ASL's concentrated tail payoffs more heavily — but the key conclusions are robust.
 
-Finally, a 2-state Markov regime model with GPD tail augmentation was built to generate 200 years of synthetic history respecting the empirical regime structure. This tightens premium estimates ~2× for Floor and DAF products (MC coefficient of variation 8–33% vs bootstrap CI width 66–120%). For ASL, the model underestimates aggregate loss concentration within crisis episodes (as a result of i.i.d. emissions within each state), so the model-based ASL premium serves as a lower bound alongside the historical upper bound.
+### Building a generative model
+
+A 2-state Markov regime model with GPD tail augmentation was built to generate long histories respecting the empirical regime structure. This tightens Floor/DAF premium estimates ~2× — but fails for ASL and DAF activation rates because i.i.d. emissions within each state destroy the within-episode severity correlation that drives these path-dependent payoffs.
+
+An **episode-based semi-Markov simulator** that resamples whole stress episodes (rather than individual intervals) fixes this structural failure, passing all 7 validation gates for DAF activation, ASL activation, and aggregate-loss quantiles. However, out-of-sample testing across eras reveals the model cannot predict across regimes (1/7 gates when training on early data and testing on late). This confirms that **nonstationarity — not model specification — is the dominant uncertainty**. The model is useful as a scenario generator, not a forward predictor.
+
+### The hedge-efficiency frontier
+
+The definitive comparison uses hedge-ratio frontiers over $h \in [0,1]$ with formal capital efficiency metrics, validated by a 52-month walk-forward protocol. Premium is treated as a deterministic expense separate from stochastic reserve risk — the reserve covers only the residual loss after the hedge payoff.
+
+**The central finding:** at conventional cost-of-capital ($k = 10\%$), holding reserves costs only ~3 bps per 30d while option hedges cost 88–132 bps. Break-even $k^*$ is 450–530% annually. Options are not justified by capital savings alone — they are justified by **tail-risk aversion**: reducing worst-1% reserve draw from 3.7% to 0.5–1.8% of notional.
+
+**Product ranking:** ASL q95 achieves the highest capital efficiency (Eff$_A$ = 2.70), stable across all pricing functionals. For protocols targeting CVaR $\leq$ 1.5%, only options can reach the required risk reduction (cheapest: ASL at ~85 bps). For targets $\geq$ 2.0%, a partial swap ($h \approx 0.3$) is cheapest because it diversifies without locking in stress-era rates.
+
+**Robustness:** Absolute premium levels are uncertain (era bands show 3–10× variation), but the ranking — ASL most efficient, swaps cheapest for relaxed targets — holds across bootstrap, era, and model uncertainty layers.
 
 ## Notebooks
 
 | # | Notebook | What it establishes |
 |---|----------|---------------------|
-| 01 | `01_synthetic_sanity` | Pipeline correctness on synthetic two-regime Markov data |
+| 01 | `01_synthetic_sanity` | Pipeline validation on synthetic data |
 | 02 | `02_funding_descriptives` | Empirical regime structure, persistence, tails across 4 venues |
 | 03 | `03_calibration` | Frozen product parameters from conditional loss and activation analysis |
 | 04 | `04_premium_surfaces` | Premium decomposition, parameter sweeps, bootstrap CIs, quote sheets |
 | 04b | `04b_ci_diagnostics` | Block-size sensitivity, component CIs, subsample dispersion |
 | 04c | `04c_pricing_functionals` | Robustness of rankings across Wang/Esscher/CVaR/Sharpe pricing |
 | 05 | `05_model_validation` | Regime-EVT model calibration, validation, model-based premiums |
+| 05b | `05b_model_validation_clustered` | Episode-based semi-Markov model; passes all validation gates |
+| 05c | `05c_model_risk_hardening` | Out-of-sample model-risk hardening; confirms nonstationarity dominates |
+| 06 | `06_hedge_frontiers_v2` | Hedge-efficiency frontiers, capital metrics, walk-forward, decision rules |

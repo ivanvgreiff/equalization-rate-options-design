@@ -9,6 +9,7 @@ docs/
 # Notebooks
 notebooks/*.html
 notebooks/01_synthetic_sanity.ipynb
+notebooks/06_hedge_frontiers.ipynb
 
 # Reports artifacts (regenerable)
 reports/figures/*.png
